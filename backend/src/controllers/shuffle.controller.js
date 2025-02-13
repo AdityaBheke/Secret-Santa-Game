@@ -6,7 +6,6 @@ export default class ShuffleController{
             res.status(400).json({message: "Please Upload a file"});
             return
         }
-        await assignSecretChild(req.file);
         res.status(200).json({message: "File Uploaded", file: req.file});
     }
 }
