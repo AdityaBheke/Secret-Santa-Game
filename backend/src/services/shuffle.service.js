@@ -99,9 +99,11 @@ export const assignSecretChild = async(oldFile) => {
         const newIndex = getUniqueIndex(originalIndex, currentIndex, originalArray.length);
         shuffledChildren[originalIndex] = secretChildEmails[newIndex];
     })
-    const newFile = await createCsvFromData(headers, employeeEmails, shuffledChildren, employeeMap, oldFile)
+    const newFile = await createCsvFromData(headers, employeeEmails, shuffledChildren, employeeMap, oldFile);
+    fs.unlink(oldFile.path,(err)=>{
+        if (err) throw err;
+    })
     return newFile;
-
     } catch (error) {
         throw new customError(500, error.name || "error while assigning secret child")
     }
