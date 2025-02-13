@@ -1,11 +1,21 @@
 
+import path from "path";
 import { assignSecretChild } from "../services/shuffle.service.js";
+import fs from 'fs';
 export default class ShuffleController{
     async shuffleEmployees(req, res, next){
         if (!req.file) {
             res.status(400).json({message: "Please Upload a file"});
             return
         }
-        res.status(200).json({message: "File Uploaded", file: req.file});
+        try {
+        const newFile = await assignSecretChild(req.file);
+        if (!fs.existsSync(path.resolve('public','downloads',newFile))) {
+            return res.status(404).send("File not found")
+        }
+        res.status(201).json({message: "File ready to download", file: newFile});
+        } catch (error) {
+            next(error)
+        }
     }
 }
