@@ -3,9 +3,19 @@ import path from 'path';
 import customError from '../middlewares/errorhandler.middleware.js';
 
 // Function will read csv and return [ [headers], [Employee_EmailID], [Secret_Child_EmailID], { Employee_EmailID: Employee_Name }]
-const getDataFromCsv = (filePath) => {
+const getDataFromCsv = (file) => {
     return new Promise((resolve, reject)=>{
-        const readStream = fs.createReadStream(filePath,{encoding: 'utf-8'})
+    if (!file) {
+        return reject(new customError(400, 'Please upload a file'));    //Throw error if file not uploaded
+    }
+    if (path.extname(file.originalname).toLocaleLowerCase()!=='.csv') {
+        if (file.path) {
+            fs.unlinkSync(file.path)                                    // delete invalid file
+        }
+        return reject(new customError(400, 'Please upload a .csv file'))    //Throw error if other than .csv file uploaded
+    }
+
+    const readStream = fs.createReadStream(file.path,{encoding: 'utf-8'})
     let buffer = '';
     let isFirstRow = true;
 
@@ -76,7 +86,7 @@ const createCsvFromData = (headers, employeeEmails, shuffledChildren, employeeMa
 export const assignSecretChild = async(oldFile) => {
     try {
         
-    const [headers, employeeEmails, secretChildEmails, employeeMap] = await getDataFromCsv(oldFile.path);
+    const [headers, employeeEmails, secretChildEmails, employeeMap] = await getDataFromCsv(oldFile);
     const assignedIndexes = [];
     const shuffledChildren = new Array(employeeEmails.length).fill(null);
 
@@ -105,7 +115,7 @@ export const assignSecretChild = async(oldFile) => {
     })
     return newFile;
     } catch (error) {
-        throw new customError(500, error.name || "error while assigning secret child")
+        throw new customError(error.statusCode || 500, error.message || "error while assigning secret child")
     }
 };
 
@@ -117,7 +127,7 @@ export const getDownloadFile = (fileName)=>{
       }
       return filePath;
     } catch (error) {
-        throw new customError(error.statusCode || 400, error.errorMessage || error.message || "error while fetching a file")
+        throw new customError(error.statusCode || 500, error.errorMessage || error.message || "error while fetching a file")
     }
 }
 
@@ -132,6 +142,6 @@ export const deleteFile = (fileName)=>{
         fs.unlinkSync(filePath);
         console.log('deleted a file')
     } catch (error) {
-        throw new customError(error.statusCode || 400, error.errorMessage || error.message || "error while deleting a file")
+        throw new customError(error.statusCode || 500, error.errorMessage || error.message || "error while deleting a file")
     }
 }

@@ -4,18 +4,14 @@ import { assignSecretChild, deleteFile, getDownloadFile } from "../services/shuf
 import fs from 'fs';
 export default class ShuffleController{
     async shuffleEmployees(req, res, next){
-        if (!req.file) {
-            res.status(400).json({message: "Please Upload a file"});
-            return
-        }
         try {
-        const newFile = await assignSecretChild(req.file);
-        if (!fs.existsSync(path.resolve('public','downloads',newFile))) {
-            return res.status(404).send("File not found")
-        }
-        res.status(201).json({message: "File ready to download", file: newFile});
+          const newFile = await assignSecretChild(req.file);
+          if (!fs.existsSync(path.resolve("public", "downloads", newFile))) {
+            return res.status(404).send("File not found");
+          }
+          res.status(201).json({ message: "File ready to download", file: newFile });
         } catch (error) {
-            next(error)
+          next(error);
         }
     }
     downloadCsv(req, res, next){
