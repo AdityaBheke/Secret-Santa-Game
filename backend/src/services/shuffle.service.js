@@ -66,82 +66,129 @@ const getDataFromCsv = (file) => {
     })
 };
 
-const createCsvFromData = (headers, employeeEmails, shuffledChildren, employeeMap, oldFile)=>{
-    return new Promise((resolve, reject)=>{
-        const newFilePath = path.resolve('public','downloads', oldFile.filename);
+const createCsvFromData = (headers, employeeEmails, shuffledChildren, employeeMap, oldFile) => {
+    return new Promise((resolve, reject) => {
+        // Resolving the path where the new CSV file will be stored
+        const newFilePath = path.resolve('public', 'downloads', oldFile.filename);
+
+        // Creating a write stream to the new CSV file
         const writeStream = fs.createWriteStream(newFilePath);
-        writeStream.write(headers.join(',')+'\n');
-        employeeEmails.forEach((employee, index)=>{
-        const row = employeeMap[employee] + ',' + employee + ',' + employeeMap[shuffledChildren[index]] + ',' + shuffledChildren[index] + '\n';
-        writeStream.write(row);
-        })
-        writeStream.end();
-        writeStream.on('finish',()=>{
-            resolve(oldFile.filename)
+
+        // Writing the headers to the CSV file
+        writeStream.write(headers.join(',') + '\n');
+
+        // Looping through employee emails to generate CSV rows
+        employeeEmails.forEach((employee, index) => {
+            // Constructing a CSV row with employee and shuffled children details
+            const row = employeeMap[employee] + ',' + employee + ',' + employeeMap[shuffledChildren[index]] + ',' + shuffledChildren[index] + '\n';
+            writeStream.write(row);
         });
-        writeStream.on('error',(err)=>reject(err));
-    })
+
+        // Ending the write stream to finish writing
+        writeStream.end();
+
+        // Resolving the promise when the write is finished
+        writeStream.on('finish', () => {
+            resolve(oldFile.filename);
+        });
+
+        // Rejecting the promise if an error occurs during writing
+        writeStream.on('error', (err) => reject(err));
+    });
 };
 
-export const assignSecretChild = async(oldFile) => {
+
+export const assignSecretChild = async (oldFile) => {
     try {
+        // Fetching data from the provided CSV file (headers, employee emails, secret child emails, and employee mapping)
+        const [headers, employeeEmails, secretChildEmails, employeeMap] = await getDataFromCsv(oldFile);
         
-    const [headers, employeeEmails, secretChildEmails, employeeMap] = await getDataFromCsv(oldFile);
-    const assignedIndexes = [];
-    const shuffledChildren = new Array(employeeEmails.length).fill(null);
+        // Array to track the assigned indexes to avoid duplication
+        const assignedIndexes = [];
+        
+        // Array to store shuffled children emails corresponding to employees
+        const shuffledChildren = new Array(employeeEmails.length).fill(null);
 
-    function getUniqueIndex(originalIndex, currentIndex, arraySize){
-        if (currentIndex == -1) {
-            return originalIndex
+        // Function to generate a unique index for assigning secret children
+        function getUniqueIndex(originalIndex, currentIndex, arraySize) {
+            if (currentIndex == -1) {
+                return originalIndex;  // If no match, return the original index
+            }
+            let newIndex = Math.floor(Math.random() * arraySize);  // Randomly generate a new index
+            // Ensure the new index is unique and not the same as the original or current index
+            if (newIndex != originalIndex && newIndex != currentIndex && !assignedIndexes.includes(newIndex)) {
+                assignedIndexes.push(newIndex);  // Track the new index as assigned
+            } else {
+                newIndex = getUniqueIndex(originalIndex, currentIndex, arraySize);  // Recursively find a unique index
+            }
+            return newIndex;
         }
-        let newIndex = Math.floor(Math.random()*arraySize);
-        if (newIndex!=originalIndex && newIndex!=currentIndex && !assignedIndexes.includes(newIndex)) {
-            assignedIndexes.push(newIndex);
-        } else {
-            newIndex = getUniqueIndex(originalIndex, currentIndex, arraySize)
-        }
-        return newIndex;
-    }
 
-    employeeEmails.forEach((employee, index, originalArray)=>{
-        const originalIndex = index;
-        const currentIndex = secretChildEmails.findIndex((secretChild)=>employee.trim()==secretChild.trim());
-        const newIndex = getUniqueIndex(originalIndex, currentIndex, originalArray.length);
-        shuffledChildren[originalIndex] = secretChildEmails[newIndex];
-    })
-    const newFile = await createCsvFromData(headers, employeeEmails, shuffledChildren, employeeMap, oldFile);
-    fs.unlink(oldFile.path,(err)=>{
-        if (err) throw err;
-    })
-    return newFile;
+        // Loop through each employee and assign a secret child from the shuffled list
+        employeeEmails.forEach((employee, index, originalArray) => {
+            const originalIndex = index;
+            // Find the current index of the employee's secret child
+            const currentIndex = secretChildEmails.findIndex((secretChild) => employee.trim() == secretChild.trim());
+            // Get a unique new index for the secret child assignment
+            const newIndex = getUniqueIndex(originalIndex, currentIndex, originalArray.length);
+            // Assign the new shuffled child email to the employee
+            shuffledChildren[originalIndex] = secretChildEmails[newIndex];
+        });
+
+        // Create a new CSV file with the assigned secret children data
+        const newFile = await createCsvFromData(headers, employeeEmails, shuffledChildren, employeeMap, oldFile);
+        
+        // Delete the original uploaded file after processing
+        fs.unlink(oldFile.path, (err) => {
+            if (err) throw err;
+        });
+
+        // Return the new file containing the secret child assignments
+        return newFile;
+
     } catch (error) {
-        throw new customError(error.statusCode || 500, error.message || "error while assigning secret child")
+        // Handle errors and throw a custom error with status code and message
+        throw new customError(error.statusCode || 500, error.message || "Error while assigning secret child");
     }
 };
 
-export const getDownloadFile = (fileName)=>{
-    try {
-      const filePath = path.resolve("public", "downloads", fileName);
-      if (!fs.existsSync(filePath)) {
-        throw new customError(404, 'File not found')
-      }
-      return filePath;
-    } catch (error) {
-        throw new customError(error.statusCode || 500, error.errorMessage || error.message || "error while fetching a file")
-    }
-}
 
-export const deleteFile = (fileName)=>{
+export const getDownloadFile = (fileName) => {
     try {
+        // Resolving the file path based on the provided file name
         const filePath = path.resolve("public", "downloads", fileName);
-        console.log("File to delete:", filePath);
-        
+
+        // Check if the file exists at the resolved path
         if (!fs.existsSync(filePath)) {
-            throw new customError(404, 'File not found')
+            // Throw a custom error if the file is not found
+            throw new customError(404, 'File not found');
         }
-        fs.unlinkSync(filePath);
-        console.log('deleted a file')
+
+        // Return the file path if the file exists
+        return filePath;
     } catch (error) {
-        throw new customError(error.statusCode || 500, error.errorMessage || error.message || "error while deleting a file")
+        // Handle errors and throw a custom error with status code and message
+        throw new customError(error.statusCode || 500, error.errorMessage || error.message || "Error while fetching a file");
     }
-}
+};
+
+
+export const deleteFile = (fileName) => {
+    try {
+        // Resolving the file path based on the provided file name
+        const filePath = path.resolve("public", "downloads", fileName);
+
+        // Check if the file exists at the resolved path
+        if (!fs.existsSync(filePath)) {
+            // Throw a custom error if the file is not found
+            throw new customError(404, 'File not found');
+        }
+
+        // Delete the file synchronously
+        fs.unlinkSync(filePath);
+
+    } catch (error) {
+        // Handle errors and throw a custom error with status code and message
+        throw new customError(error.statusCode || 500, error.errorMessage || error.message || "Error while deleting a file");
+    }
+};

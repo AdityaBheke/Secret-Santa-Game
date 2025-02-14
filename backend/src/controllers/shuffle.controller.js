@@ -2,34 +2,58 @@
 import path from "path";
 import { assignSecretChild, deleteFile, getDownloadFile } from "../services/shuffle.service.js";
 import fs from 'fs';
-export default class ShuffleController{
-    async shuffleEmployees(req, res, next){
+export default class ShuffleController {
+    
+    // Method to shuffle employees and assign secret children
+    async shuffleEmployees(req, res, next) {
         try {
-          const newFile = await assignSecretChild(req.file);
-          if (!fs.existsSync(path.resolve("public", "downloads", newFile))) {
-            return res.status(404).send("File not found");
-          }
-          res.status(201).json({ message: "File ready to download", file: newFile });
+            // Assign secret children and get the new file
+            const newFile = await assignSecretChild(req.file);
+
+            // Check if the newly created file exists
+            if (!fs.existsSync(path.resolve("public", "downloads", newFile))) {
+                return res.status(404).send("File not found");
+            }
+
+            // Respond with the file ready for download
+            res.status(201).json({ message: "File ready to download", file: newFile });
         } catch (error) {
-          next(error);
+            // Pass any errors to the next middleware
+            next(error);
         }
     }
-    downloadCsv(req, res, next){
+
+    // Method to download the CSV file
+    downloadCsv(req, res, next) {
         try {
+            // Extract the file name from the URL parameters
             const fileName = req.params.filename;
-            const downloadFilePath = getDownloadFile(fileName)
+
+            // Get the file's path to download
+            const downloadFilePath = getDownloadFile(fileName);
+
+            // Send the file as a download response
             res.status(200).download(downloadFilePath);
         } catch (error) {
-            next(error)
+            // Pass any errors to the next middleware
+            next(error);
         }
     }
-    deleteDownloadedFile(req, res, next){
+
+    // Method to delete the downloaded file
+    deleteDownloadedFile(req, res, next) {
         try {
+            // Extract the file name from the URL parameters
             const fileName = req.params.filename;
+
+            // Delete the file
             deleteFile(fileName);
-            res.status(200).json({message: "File deleted"})
+
+            // Respond with a success message
+            res.status(200).json({ message: "File deleted" });
         } catch (error) {
-            next(error)
+            // Pass any errors to the next middleware
+            next(error);
         }
     }
 }
