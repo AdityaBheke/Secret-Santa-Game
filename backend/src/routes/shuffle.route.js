@@ -10,4 +10,7 @@ shuffleRouter.post('/shuffle',fileUpload.single('file'),(req, res, next)=>{
 shuffleRouter.get('/download/:filename',(req, res, next)=>{
     shuffleController.downloadCsv(req, res, next);
 })
+shuffleRouter.delete('/delete/:filename', (req, res, next)=>{
+    shuffleController.deleteDownloadedFile(req, res, next);
+})
 export default shuffleRouter;

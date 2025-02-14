@@ -120,3 +120,18 @@ export const getDownloadFile = (fileName)=>{
         throw new customError(error.statusCode || 400, error.errorMessage || error.message || "error while fetching a file")
     }
 }
+
+export const deleteFile = (fileName)=>{
+    try {
+        const filePath = path.resolve("public", "downloads", fileName);
+        console.log("File to delete:", filePath);
+        
+        if (!fs.existsSync(filePath)) {
+            throw new customError(404, 'File not found')
+        }
+        fs.unlinkSync(filePath);
+        console.log('deleted a file')
+    } catch (error) {
+        throw new customError(error.statusCode || 400, error.errorMessage || error.message || "error while deleting a file")
+    }
+}

@@ -1,6 +1,6 @@
 
 import path from "path";
-import { assignSecretChild, getDownloadFile } from "../services/shuffle.service.js";
+import { assignSecretChild, deleteFile, getDownloadFile } from "../services/shuffle.service.js";
 import fs from 'fs';
 export default class ShuffleController{
     async shuffleEmployees(req, res, next){
@@ -23,6 +23,15 @@ export default class ShuffleController{
             const fileName = req.params.filename;
             const downloadFilePath = getDownloadFile(fileName)
             res.status(200).download(downloadFilePath);
+        } catch (error) {
+            next(error)
+        }
+    }
+    deleteDownloadedFile(req, res, next){
+        try {
+            const fileName = req.params.filename;
+            deleteFile(fileName);
+            res.status(200).json({message: "File deleted"})
         } catch (error) {
             next(error)
         }
