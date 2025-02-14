@@ -7,4 +7,7 @@ const shuffleController = new ShuffleController();
 shuffleRouter.post('/shuffle',fileUpload.single('file'),(req, res, next)=>{
     shuffleController.shuffleEmployees(req, res, next);
 })
+shuffleRouter.get('/download/:filename',(req, res, next)=>{
+    shuffleController.downloadCsv(req, res, next);
+})
 export default shuffleRouter;

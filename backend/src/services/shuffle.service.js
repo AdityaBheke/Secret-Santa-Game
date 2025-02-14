@@ -109,3 +109,14 @@ export const assignSecretChild = async(oldFile) => {
     }
 };
 
+export const getDownloadFile = (fileName)=>{
+    try {
+      const filePath = path.resolve("public", "downloads", fileName);
+      if (!fs.existsSync(filePath)) {
+        throw new customError(404, 'File not found')
+      }
+      return filePath;
+    } catch (error) {
+        throw new customError(error.statusCode || 400, error.errorMessage || error.message || "error while fetching a file")
+    }
+}
