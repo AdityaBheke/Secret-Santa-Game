@@ -32,6 +32,8 @@ export default class ShuffleController {
             // Get the file's path to download
             const downloadFilePath = getDownloadFile(fileName);
 
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Type', 'text/csv');
             // Send the file as a download response
             res.status(200).download(downloadFilePath);
         } catch (error) {
