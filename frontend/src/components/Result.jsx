@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // eslint-disable-next-line react/prop-types
 export default function Result({result, setResult}) {
@@ -52,7 +52,25 @@ export default function Result({result, setResult}) {
             }
         }
     },[result])
-    
+
+    useEffect(()=>{
+        const cleanupOnExit = ()=>{
+            if (result) {
+                const backendUrl = import.meta.env.VITE_BACKEND_URL; 
+                // axios.delete(`${backendUrl}/api/secret-santa/delete/${result}`);
+                fetch(`${backendUrl}/api/secret-santa/delete/${result}`,{
+                    method: 'DELETE',
+                    keepalive: true
+                })
+                console.log("CleanUp on Exit");
+            }
+        }
+        window.addEventListener('beforeunload', cleanupOnExit)
+        return ()=>{
+            window.removeEventListener('beforeunload', cleanupOnExit)
+        }
+    },[result])
+
     return <div className="upload-container">
         <span className="download-message">Your Secret Santa file is ready! Click below to download</span>
         {error && <span>{error}</span>}
