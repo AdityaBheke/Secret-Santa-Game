@@ -1,12 +1,14 @@
 import bodyParser from 'body-parser';
 import express from 'express';
 import dotenv from 'dotenv';
+import cors from 'cors';
 dotenv.config();
 
 import { errorHandler } from './src/middlewares/errorhandler.middleware.js';
 import shuffleRouter from './src/routes/shuffle.route.js';
 const PORT = process.env.PORT || 3000;
 const server = express();
+server.use(cors())
 server.use(bodyParser.json());
 
 server.use('/api/secret-santa', shuffleRouter);
