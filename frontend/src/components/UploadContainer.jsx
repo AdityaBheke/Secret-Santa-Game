@@ -1,5 +1,54 @@
+import axios from "axios";
+import { useCallback, useState } from "react";
+
 // eslint-disable-next-line react/prop-types
-export default function UploadContainer({handleFileChange, handleUploadFile, error}) {
+export default function UploadContainer({setResult}) {
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [error, setError] = useState(null);
+  const handleFileChange = (e)=>{
+    const file = e.target.files[0];
+    if (file) {
+        setUploadedFile(file)
+    }
+}
+const handleUploadFile = useCallback(async () => {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  if (!uploadedFile) {
+    setError("Please upload a file");
+    return
+  }
+  try {
+    const response = await axios.post(
+      `${backendUrl}/api/secret-santa/shuffle`,
+      {
+        file: uploadedFile,
+      },
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    if (response.data.file) {
+        setResult(response.data.file)
+    }
+    setUploadedFile(null)
+    setError(null)
+  } catch (error) {
+    if (error.response) {
+        if (error.response.status===500) {
+            setError("Something went wrong! Please try again.");
+        } else {
+            setError(error.response.data.message);
+        }
+        console.log("Error Response:", error.response.data.message);
+    }else if(error.request){
+        console.log("No Response received:", error.request);
+    }else{
+        console.log("Error while making request", error)
+    }
+  }
+},[setResult, uploadedFile]);
     return (
       <div className="upload-container">
         <span className="upload-message">
