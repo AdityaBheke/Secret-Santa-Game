@@ -147,10 +147,12 @@ export const assignSecretChild = async (oldFile) => {
         return newFile;
 
     } catch (error) {
-        // Delete the original uploaded file after processing
-        fs.unlink(oldFile.path, (err) => {
+        if (fs.existsSync(oldFile.path)) {
+          // Delete the original uploaded file after processing
+          fs.unlink(oldFile.path, (err) => {
             if (err) throw err;
-        });
+          });
+        }
         // Handle errors and throw a custom error with status code and message
         throw new customError(error.statusCode || 500, error.message || "Error while assigning secret child");
     }
