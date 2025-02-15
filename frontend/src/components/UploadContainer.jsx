@@ -1,11 +1,12 @@
 // eslint-disable-next-line react/prop-types
-export default function UploadContainer({handleFileChange}) {
+export default function UploadContainer({handleFileChange, handleUploadFile, error}) {
     return (
       <div className="upload-container">
         <span className="upload-message">
           Upload your Secret Santa list and let the magic begin!
         </span>
         <input type="file" onChange={handleFileChange} />
+        {error && <span className="error-message">{error}</span>}
         <details className="upload-instruction">
           <summary>Instructions</summary>
           <ul>
@@ -16,6 +17,7 @@ export default function UploadContainer({handleFileChange}) {
             <li>If an employee has no assigned Secret Child, repeat their name and email in the Secret_Child columns—we’ll handle the rest!</li>
           </ul>
         </details>
+        <button onClick={handleUploadFile} className="upload-button">Get Updated File</button>
       </div>
     );
 }
