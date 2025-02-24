@@ -42,9 +42,11 @@ const handleUploadFile = useCallback(async () => {
             setError(error.response.data.message);
         }
         console.log("Error Response:", error.response.data.message);
-    }else if(error.request){
-        console.log("No Response received:", error.request);
+    }else if(error.request && !error.response){
+        setError("Something went wrong! Please try again.")
+        console.log("No Response received:", error.message || error.request);
     }else{
+      setError("Something went wrong! Please try again.")
         console.log("Error while making request", error)
     }
   }
